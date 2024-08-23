@@ -1,6 +1,6 @@
 use std::{
     io::{stdout, Write},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use crossterm::{
@@ -11,17 +11,32 @@ use termint::{
     enums::{Color, Modifier},
     geometry::{Constraint, Coords, TextAlign},
     term::Term,
-    widgets::{Layout, Paragraph, Spacer, StrSpanExtension},
+    widgets::{Layout, Paragraph, Spacer, StrSpanExtension, Widget},
 };
 
-use crate::{board::Board, error::Error};
+use crate::{
+    board::Board,
+    error::Error,
+    stats::{stat::Stat, Stats},
+};
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum State {
+    Scrambled,
+    Playing,
+    Idle,
+}
 
 /// App struct containing the main loop, key listeners and rendering
 #[derive(Debug)]
 pub struct App {
-    pub term: Term,
-    pub board: Board,
+    term: Term,
+    board: Board,
     time: Duration,
+    moves_cnt: usize,
+    moves: String,
+    state: State,
+    stats: Stats,
 }
 
 impl App {
@@ -31,6 +46,10 @@ impl App {
             term: Term::new().small_screen(App::small_screen()),
             board: Board::new(size),
             time: Duration::from_secs(0),
+            moves_cnt: 0,
+            moves: String::new(),
+            state: State::Idle,
+            stats: Stats::load(&size),
         }
     }
 
@@ -64,6 +83,42 @@ impl App {
         }
     }
 
+    fn game_loop(&mut self) -> Result<(), Error> {
+        let scramble = self.board.cells.clone();
+
+        self.state = State::Playing;
+        self.time = Duration::from_secs(0);
+        self.moves_cnt = 1;
+        self.render()?;
+
+        let start = Instant::now();
+        let mut last = start;
+
+        let mut running = true;
+        while running {
+            if poll(Duration::from_millis(1))? {
+                self.time = start.elapsed();
+                running = !self.event()?;
+            } else if last.elapsed() >= Duration::from_secs_f64(0.001) {
+                self.time = start.elapsed();
+                last = Instant::now();
+                self.render()?;
+            }
+        }
+
+        if self.state == State::Playing {
+            self.stats.add(Stat::new(
+                self.time,
+                self.moves_cnt,
+                self.moves.clone(),
+                scramble,
+            ));
+            self.stats.save(&self.board.size)?;
+            self.state = State::Idle;
+        }
+        Ok(())
+    }
+
     /// Renders current screen of the [`App`]
     pub fn render(&mut self) -> Result<(), Error> {
         let mut board = Layout::horizontal();
@@ -73,7 +128,10 @@ impl App {
 
         let mut layout = Layout::vertical();
         layout.add_child(Spacer::new(), Constraint::Fill);
-        layout.add_child(board, Constraint::Min(0));
+        layout.add_child(
+            board,
+            Constraint::Length(self.board.height(&Coords::new(0, 0))),
+        );
         layout.add_child(Spacer::new(), Constraint::Fill);
         layout.add_child(App::render_help(), Constraint::Min(0));
 
@@ -82,53 +140,94 @@ impl App {
     }
 
     /// Handles key listening
-    fn event(&mut self) -> Result<(), Error> {
+    fn event(&mut self) -> Result<bool, Error> {
         match read()? {
             Event::Key(e) => self.key_handler(e),
-            Event::Resize(_, _) => self.render(),
-            _ => Ok(()),
+            Event::Resize(_, _) => {
+                self.render()?;
+                Ok(false)
+            }
+            _ => Ok(false),
         }
     }
 }
 
 impl App {
     /// Handles key events
-    fn key_handler(&mut self, event: KeyEvent) -> Result<(), Error> {
-        match event.code {
-            KeyCode::Up => {
-                if event.modifiers.contains(KeyModifiers::SHIFT) {
-                    self.board.move_up();
-                }
-                self.board.up()
+    fn key_handler(&mut self, event: KeyEvent) -> Result<bool, Error> {
+        let solved = match event.code {
+            KeyCode::Up => self.handle_move(
+                |s| s.board.up(),
+                |s| s.board.move_up(),
+                'u',
+                event,
+            )?,
+            KeyCode::Down => self.handle_move(
+                |s| s.board.down(),
+                |s| s.board.move_down(),
+                'd',
+                event,
+            )?,
+            KeyCode::Right => self.handle_move(
+                |s| s.board.right(),
+                |s| s.board.move_right(),
+                'r',
+                event,
+            )?,
+            KeyCode::Left => self.handle_move(
+                |s| s.board.left(),
+                |s| s.board.move_left(),
+                'l',
+                event,
+            )?,
+            KeyCode::Enter => {
+                self.board.scramble();
+                self.state = State::Scrambled;
+                true
             }
-            KeyCode::Down => {
-                if event.modifiers.contains(KeyModifiers::SHIFT) {
-                    self.board.move_down();
-                }
-                self.board.down();
-            }
-            KeyCode::Right => {
-                if event.modifiers.contains(KeyModifiers::SHIFT) {
-                    self.board.move_right();
-                }
-                self.board.right();
-            }
-            KeyCode::Left => {
-                if event.modifiers.contains(KeyModifiers::SHIFT) {
-                    self.board.move_left();
-                }
-                self.board.left();
-            }
-            KeyCode::Enter => self.board.scramble(),
             KeyCode::Char('c')
                 if event.modifiers.contains(KeyModifiers::CONTROL) =>
             {
                 return Err(Error::Exit);
             }
             KeyCode::Esc | KeyCode::Char('q') => return Err(Error::Exit),
-            _ => return Ok(()),
+            _ => return Ok(false),
+        };
+        self.render()?;
+        Ok(solved)
+    }
+
+    fn handle_move<F1, F2>(
+        &mut self,
+        mov: F1,
+        rot: F2,
+        c: char,
+        event: KeyEvent,
+    ) -> Result<bool, Error>
+    where
+        F1: Fn(&mut App),
+        F2: Fn(&mut App),
+    {
+        mov(self);
+        if event.modifiers.contains(KeyModifiers::SHIFT) {
+            rot(self);
+            match self.state {
+                State::Scrambled => {
+                    self.moves = c.to_uppercase().to_string();
+                    self.game_loop()?
+                }
+                State::Playing => {
+                    self.moves_cnt += 1;
+                    self.moves.push(' ');
+                    self.moves.push(c.to_uppercase().next().unwrap_or(c))
+                }
+                _ => {}
+            }
+            return Ok(self.board.solved());
+        } else if self.state == State::Playing {
+            self.moves.push_str(&format!(" {c}"));
         }
-        self.render()
+        Ok(false)
     }
 
     /// Small screen to be displayed, when game can't fit
@@ -151,17 +250,68 @@ impl App {
     fn simple_stats(&self) -> Layout {
         let mut layout = Layout::vertical().padding((0, 0, 0, 1));
         layout.add_child(
-            format!("{:.3}", self.time.as_secs_f64()),
+            format!("{:.3}", self.time.as_secs_f64())
+                .fg(Color::White)
+                .modifier(Modifier::BOLD),
             Constraint::Min(0),
         );
+
+        self.simple_stats_moves(&mut layout);
+
+        if let Some(best) = self.stats.best() {
+            layout.add_child(self.simple_stats_best(best), Constraint::Min(0));
+        }
+        layout.add_child(Spacer::new(), Constraint::Length(1));
+
+        self.simple_stats_list(&mut layout);
         layout
+    }
+
+    /// Gets moves count and moves per second
+    fn simple_stats_moves(&self, layout: &mut Layout) {
+        let mps = match self.time.as_secs_f64() {
+            0.0 => 0.0,
+            t => self.moves_cnt as f64 / t,
+        };
+        layout.add_child(
+            format!("{} moves / {:.2} mps", self.moves_cnt, mps)
+                .fg(Color::Gray),
+            Constraint::Min(0),
+        );
+    }
+
+    /// Gets the best time paragraph
+    fn simple_stats_best(&self, best: &Stat) -> Paragraph {
+        Paragraph::new(vec![
+            format!("{:.3}", best.time().as_secs_f64())
+                .fg(Color::Green)
+                .into(),
+            best.moves_cnt().to_string().fg(Color::DarkGreen).into(),
+        ])
+        .separator(" ")
+    }
+
+    /// Adds stats list to the simple stats layout
+    fn simple_stats_list(&self, layout: &mut Layout) {
+        let cnt = self.board.height(&Coords::new(0, 0)).saturating_sub(4);
+        for stat in self.stats.solves().iter().take(cnt) {
+            let p = Paragraph::new(vec![
+                format!("{:.3}", stat.time().as_secs_f64())
+                    .fg(Color::White)
+                    .into(),
+                stat.moves_cnt().to_string().fg(Color::Gray).into(),
+            ])
+            .separator(" ");
+            layout.add_child(p, Constraint::Min(0));
+        }
     }
 
     /// Renders help with all the keybinds
     fn render_help() -> Paragraph {
         Paragraph::new(vec![
             "[Arrows]Move".fg(Color::Gray).into(),
-            "[Shift+Arrow]Rotate".fg(Color::Gray).into(),
+            "[Shift+Arrows]Rotate".fg(Color::Gray).into(),
+            "[Enter]Scramble".fg(Color::Gray).into(),
             "[Esc|q]Quit".fg(Color::Gray).into(),
         ])
         .separator("  ")

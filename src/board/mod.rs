@@ -24,7 +24,12 @@ impl Board {
 
     /// Checks if the [`Board`] is solved
     pub fn solved(&mut self) -> bool {
-        self.cells.windows(2).all(|w| w[0] < w[1])
+        for i in 0..(self.size.x * self.size.y - 1) {
+            if self.cells[i] >= self.cells[i + 1] {
+                return false;
+            }
+        }
+        true
     }
 
     /// Scrambles the [`Board`]
