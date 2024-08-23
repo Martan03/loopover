@@ -2,12 +2,15 @@
 
 Loopover TUI implementation in Rust 🦀
 
+![image](https://github.com/user-attachments/assets/794dc0a0-749d-4159-b422-655af2498d4f)
+
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
 - [Detailed description](#detailed-description)
     - [What is Loopover?](#what-is-loopover)
     - [TUI & usage description](#tui--usage-description)
+    - [Other sizes](#other-sizes)
     - [Statistics](#statistics)
     - [Other keybinds](#other-keybinds)
 - [Links](#links)
@@ -56,6 +59,16 @@ puzzle. By using `Arrow` keys you can change selected cell and when pressing
 `Shift` together with any `Arrow` key, you slide from selected position to
 direction corresponding to the arrow pressed. The timer is started after the
 first sliding move and after finishing the solve, it's saved in the stats.
+
+![image](https://github.com/user-attachments/assets/05bed42e-6c70-4c6f-bd93-20197926b212)
+
+### Other sizes
+
+When the board contains more then 9 cells, more compact cell type is used.
+The game works the same, it is just for the purpose of fitting the board to
+the screen.
+
+![image](https://github.com/user-attachments/assets/cce85609-4742-4194-adea-886915aaa521)
 
 ### Statistics
 
