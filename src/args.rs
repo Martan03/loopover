@@ -78,7 +78,7 @@ impl Args {
 impl Default for Args {
     fn default() -> Self {
         Self {
-            size: Coords::new(4, 4),
+            size: Coords::new(3, 3),
             help: false,
         }
     }
