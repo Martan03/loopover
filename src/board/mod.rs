@@ -10,6 +10,7 @@ pub struct Board {
     pub cells: Vec<usize>,
     pub selected: Coords,
     pub size: Coords,
+    small: bool,
 }
 
 impl Board {
@@ -19,6 +20,7 @@ impl Board {
             cells: (1..=(size.x * size.y)).collect(),
             selected: Coords::new(0, 0),
             size,
+            small: size.x * size.y > 9,
         }
     }
 
@@ -100,7 +102,8 @@ impl Board {
     /// Shuffles the [`Board`]
     fn shuffle(&mut self) {
         let mut rng = rand::thread_rng();
-        for _ in 0..21 {
+        let lim = self.size.x * self.size.x * self.size.y * self.size.y;
+        for _ in 0..lim {
             let sel = Coords::new(
                 rng.gen_range(0..self.size.x),
                 rng.gen_range(0..self.size.y),

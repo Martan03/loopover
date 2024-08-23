@@ -1,12 +1,28 @@
 use app::App;
-use termint::geometry::Coords;
+use args::Args;
+use error::Error;
+use termint::{enums::Color, widgets::StrSpanExtension};
 
 mod app;
+mod args;
 mod board;
 mod error;
 mod stats;
 
 fn main() {
-    let mut app = App::new(Coords::new(3, 3));
-    _ = app.run();
+    if let Err(e) = run() {
+        println!("{} {e}", "Error:".fg(Color::Red));
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result<(), Error> {
+    let args = Args::parse(std::env::args())?;
+    if args.help {
+        Args::help();
+        return Ok(());
+    }
+
+    let mut app = App::new(args.size);
+    app.run()
 }

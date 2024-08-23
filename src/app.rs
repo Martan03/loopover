@@ -84,12 +84,15 @@ impl App {
     }
 
     fn game_loop(&mut self) -> Result<(), Error> {
-        let scramble = self.board.cells.clone();
-
         self.state = State::Playing;
         self.time = Duration::from_secs(0);
         self.moves_cnt = 1;
         self.render()?;
+
+        let scramble = self.board.cells.clone();
+        if self.board.solved() {
+            return self.save_stat(scramble);
+        }
 
         let start = Instant::now();
         let mut last = start;
@@ -106,17 +109,7 @@ impl App {
             }
         }
 
-        if self.state == State::Playing {
-            self.stats.add(Stat::new(
-                self.time,
-                self.moves_cnt,
-                self.moves.clone(),
-                scramble,
-            ));
-            self.stats.save(&self.board.size)?;
-            self.state = State::Idle;
-        }
-        Ok(())
+        self.save_stat(scramble)
     }
 
     /// Renders current screen of the [`App`]
@@ -228,6 +221,21 @@ impl App {
             self.moves.push_str(&format!(" {c}"));
         }
         Ok(false)
+    }
+
+    /// Saves stat
+    fn save_stat(&mut self, scramble: Vec<usize>) -> Result<(), Error> {
+        if self.state == State::Playing {
+            self.stats.add(Stat::new(
+                self.time,
+                self.moves_cnt,
+                self.moves.clone(),
+                scramble,
+            ));
+            self.stats.save(&self.board.size)?;
+            self.state = State::Idle;
+        }
+        Ok(())
     }
 
     /// Small screen to be displayed, when game can't fit
