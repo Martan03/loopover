@@ -21,6 +21,7 @@ use crate::{board::Board, error::Error};
 pub struct App {
     pub term: Term,
     pub board: Board,
+    time: Duration,
 }
 
 impl App {
@@ -29,6 +30,7 @@ impl App {
         Self {
             term: Term::new().small_screen(App::small_screen()),
             board: Board::new(size),
+            time: Duration::from_secs(0),
         }
     }
 
@@ -64,8 +66,10 @@ impl App {
 
     /// Renders current screen of the [`App`]
     pub fn render(&mut self) -> Result<(), Error> {
-        let mut board = Layout::horizontal().center();
+        let mut board = Layout::horizontal();
+        board.add_child(Spacer::new(), Constraint::Fill);
         board.add_child(self.board.clone(), Constraint::Min(0));
+        board.add_child(self.simple_stats(), Constraint::Fill);
 
         let mut layout = Layout::vertical();
         layout.add_child(Spacer::new(), Constraint::Fill);
@@ -115,6 +119,7 @@ impl App {
                 }
                 self.board.left();
             }
+            KeyCode::Enter => self.board.scramble(),
             KeyCode::Char('c')
                 if event.modifiers.contains(KeyModifiers::CONTROL) =>
             {
@@ -137,6 +142,16 @@ impl App {
         );
         layout.add_child(
             "You have to increase terminal size".align(TextAlign::Center),
+            Constraint::Min(0),
+        );
+        layout
+    }
+
+    /// Gets simple stats layout
+    fn simple_stats(&self) -> Layout {
+        let mut layout = Layout::vertical().padding((0, 0, 0, 1));
+        layout.add_child(
+            format!("{:.3}", self.time.as_secs_f64()),
             Constraint::Min(0),
         );
         layout

@@ -1,3 +1,4 @@
+use rand::{seq::SliceRandom, Rng};
 use termint::{geometry::Coords, widgets::Widget};
 
 mod asci;
@@ -21,9 +22,22 @@ impl Board {
         }
     }
 
+    /// Checks if the [`Board`] is solved
+    pub fn solved(&mut self) -> bool {
+        self.cells.windows(2).all(|w| w[0] < w[1])
+    }
+
+    /// Scrambles the [`Board`]
+    pub fn scramble(&mut self) {
+        self.shuffle();
+        while self.solved() {
+            self.cells.shuffle(&mut rand::thread_rng());
+        }
+    }
+
     /// Restarts the game
     pub fn restart(&mut self) {
-        self.cells = vec![0; self.size.x * self.size.y];
+        self.cells = (1..=(self.size.x * self.size.y)).collect();
     }
 
     /// Sets selected cell
@@ -39,13 +53,7 @@ impl Board {
 
     /// Rotates selected column up
     pub fn move_up(&mut self) {
-        let cell = self.cells[self.selected.x];
-        let mut id = self.selected.x;
-        for _ in 1..self.size.y {
-            self.cells[id] = self.cells[id + self.size.x];
-            id += self.size.x;
-        }
-        self.cells[id] = cell;
+        self.rotate(self.selected.x, self.size.y, self.size.x as isize);
     }
 
     /// Moves selected up
@@ -55,13 +63,8 @@ impl Board {
 
     /// Rotates selected column down
     pub fn move_down(&mut self) {
-        let mut id = self.selected.x + self.size.x * (self.size.y - 1);
-        let cell = self.cells[id];
-        for _ in 1..self.size.y {
-            self.cells[id] = self.cells[id - self.size.x];
-            id -= self.size.x;
-        }
-        self.cells[id] = cell;
+        let start = self.selected.x + self.size.x * (self.size.y - 1);
+        self.rotate(start, self.size.y, -(self.size.x as isize));
     }
 
     /// Moves selected up
@@ -73,13 +76,7 @@ impl Board {
     /// Rotates selected row left
     pub fn move_left(&mut self) {
         let start = self.selected.y * self.size.x;
-        let end = start + self.size.x;
-
-        let first = self.cells[start];
-        for i in start..end - 1 {
-            self.cells[i] = self.cells[i + 1];
-        }
-        self.cells[end - 1] = first;
+        self.rotate(start, self.size.x, 1);
     }
 
     /// Moves selected up
@@ -89,14 +86,46 @@ impl Board {
 
     /// Rotates selected row right
     pub fn move_right(&mut self) {
-        let start = self.selected.y * self.size.x;
-        let end = start + self.size.x;
+        let start = self.selected.y * self.size.x + self.size.x - 1;
+        self.rotate(start, self.size.x, -1);
+    }
+}
 
-        let first = self.cells[end - 1];
-        for i in (start + 1..end).rev() {
-            self.cells[i] = self.cells[i - 1];
+impl Board {
+    /// Shuffles the [`Board`]
+    fn shuffle(&mut self) {
+        let mut rng = rand::thread_rng();
+        for _ in 0..21 {
+            let sel = Coords::new(
+                rng.gen_range(0..self.size.x),
+                rng.gen_range(0..self.size.y),
+            );
+
+            match rng.gen_range(0..4) {
+                0 => self.rotate(sel.x, self.size.y, self.size.x as isize),
+                1 => {
+                    let start = sel.x + self.size.x * (self.size.y - 1);
+                    self.rotate(start, self.size.y, -(self.size.x as isize));
+                }
+                2 => self.rotate(sel.y * self.size.x, self.size.x, 1),
+                3 => {
+                    let start = sel.y * self.size.x + self.size.x - 1;
+                    self.rotate(start, self.size.x, -1);
+                }
+                _ => {}
+            }
         }
-        self.cells[start] = first;
+    }
+
+    /// Applies rotation from the start position with given step
+    fn rotate(&mut self, mut start: usize, size: usize, step: isize) {
+        let cell = self.cells[start];
+        for _ in 1..size {
+            let next = (start as isize + step) as usize;
+            self.cells[start] = self.cells[next];
+            start = next;
+        }
+        self.cells[start] = cell;
     }
 }
 
