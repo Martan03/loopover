@@ -34,6 +34,7 @@ pub struct App {
     board: Board,
     time: Duration,
     moves_cnt: usize,
+    start_pos: Coords,
     moves: String,
     state: State,
     stats: Stats,
@@ -47,6 +48,7 @@ impl App {
             board: Board::new(size),
             time: Duration::from_secs(0),
             moves_cnt: 0,
+            start_pos: Coords::new(0, 0),
             moves: String::new(),
             state: State::Idle,
             stats: Stats::load(&size),
@@ -201,12 +203,14 @@ impl App {
         F1: Fn(&mut App),
         F2: Fn(&mut App),
     {
+        let pos = self.board.selected;
         mov(self);
         if event.modifiers.contains(KeyModifiers::SHIFT) {
             rot(self);
             match self.state {
                 State::Scrambled => {
                     self.moves = c.to_uppercase().to_string();
+                    self.start_pos = pos;
                     self.game_loop()?
                 }
                 State::Playing => {
@@ -230,6 +234,7 @@ impl App {
                 self.time,
                 self.moves_cnt,
                 self.moves.clone(),
+                self.start_pos,
                 scramble,
             ));
             self.stats.save(&self.board.size)?;
