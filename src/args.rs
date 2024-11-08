@@ -1,17 +1,24 @@
 use termint::{
     enums::Color,
-    geometry::Coords,
     help,
     widgets::{Grad, StrSpanExtension},
 };
 
-use crate::error::Error;
+use crate::{error::Error, size::Size};
+
+#[derive(Debug, Eq, PartialEq, Clone, Default)]
+pub enum Action {
+    #[default]
+    Play,
+    Config,
+    Help,
+}
 
 /// Parses given arguments and checks for arguments conditions
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Args {
-    pub size: Coords,
-    pub help: bool,
+    pub size: Option<Size>,
+    pub action: Action,
 }
 
 impl Args {
@@ -24,7 +31,8 @@ impl Args {
         while let Some(arg) = args_iter.next() {
             match arg.as_str() {
                 "-s" | "--size" => parsed.parse_size(&mut args_iter)?,
-                "-h" | "--help" => parsed.help = true,
+                "-h" | "--help" => parsed.action = Action::Help,
+                "config" => parsed.action = Action::Config,
                 arg => Err(format!("unexpected argument: '{arg}'"))?,
             }
         }
@@ -54,10 +62,11 @@ impl Args {
     where
         T: Iterator<Item = String>,
     {
-        self.size = Coords::new(Args::get_num(args)?, Args::get_num(args)?);
-        if self.size.x < 2 || self.size.y < 2 {
+        let size = Size::new(Args::get_num(args)?, Args::get_num(args)?);
+        if size.width < 2 || size.height < 2 {
             return Err(Error::Msg("minimum supported size is 2".into()));
         }
+        self.size = Some(size);
         Ok(())
     }
 
@@ -72,14 +81,5 @@ impl Args {
 
         val.parse::<usize>()
             .map_err(|_| Error::Msg(format!("number expected, got '{val}'")))
-    }
-}
-
-impl Default for Args {
-    fn default() -> Self {
-        Self {
-            size: Coords::new(3, 3),
-            help: false,
-        }
     }
 }

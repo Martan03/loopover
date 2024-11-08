@@ -5,9 +5,10 @@ use termint::{
     widgets::{Grid, StrSpanExtension, Widget},
 };
 
-use crate::board::Board;
-
-use super::asci::{get_cell, get_min_cell, get_min_sel_cell, get_sel_cell};
+use super::{
+    asci::{get_cell, get_min_cell, get_min_sel_cell, get_sel_cell},
+    board_struct::Board,
+};
 
 impl Widget for Board {
     fn render(&self, buffer: &mut Buffer) {

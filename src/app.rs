@@ -15,9 +15,9 @@ use termint::{
 };
 
 use crate::{
-    board::Board,
+    board::board_struct::Board,
     error::Error,
-    stats::{stat::Stat, Stats},
+    stats::{stat::Stat, stats_struct::Stats},
 };
 
 #[derive(Debug, PartialEq, Eq)]
