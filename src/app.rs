@@ -55,17 +55,17 @@ impl App {
 
     /// Runs the [`App`]
     pub fn run(&mut self) -> Result<(), Error> {
+        enable_raw_mode()?;
         // Saves screen, clears screen and hides cursor
         print!("\x1b[?1049h\x1b[2J\x1b[?25l");
         _ = stdout().flush();
-        enable_raw_mode()?;
 
         let res = self.main_loop();
 
-        disable_raw_mode()?;
         // Restores screen
         print!("\x1b[?1049l\x1b[?25h");
         _ = stdout().flush();
+        disable_raw_mode()?;
 
         match res {
             Err(Error::Exit) => Ok(()),

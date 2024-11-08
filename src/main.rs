@@ -1,12 +1,15 @@
 use std::{
     env,
     fs::create_dir_all,
+    io::{stdout, Write},
+    panic::{set_hook, take_hook},
     process::{Command, ExitCode},
 };
 
 use app::App;
 use args::{Action, Args};
 use config::Config;
+use crossterm::terminal::{disable_raw_mode, is_raw_mode_enabled};
 use error::Error;
 use termint::{enums::Color, widgets::StrSpanExtension};
 
@@ -29,6 +32,8 @@ fn main() -> ExitCode {
 }
 
 fn run() -> Result<(), Error> {
+    register_panic_hook();
+
     let args = Args::parse(std::env::args())?;
     match args.action {
         Action::Play => run_play(args),
@@ -55,4 +60,17 @@ fn run_config() -> Result<(), Error> {
 
     Command::new(editor).arg(file).spawn()?.wait()?;
     Ok(())
+}
+
+fn register_panic_hook() {
+    let hook = take_hook();
+    set_hook(Box::new(move |pi| {
+        if is_raw_mode_enabled().unwrap_or_default() {
+            // Restores screen
+            print!("\x1b[?1049l\x1b[?25h");
+            _ = stdout().flush();
+            _ = disable_raw_mode();
+        }
+        hook(pi);
+    }));
 }
