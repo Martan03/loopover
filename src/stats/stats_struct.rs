@@ -5,7 +5,7 @@ use std::{
 
 use dirs::config_dir;
 use serde::{Deserialize, Serialize};
-use termint::geometry::Coords;
+use termint::geometry::Vec2;
 
 use crate::error::Error;
 
@@ -19,7 +19,7 @@ pub struct Stats {
 
 impl Stats {
     /// Loads the stats with given board size
-    pub fn load(size: &Coords) -> Self {
+    pub fn load(size: &Vec2) -> Self {
         match std::fs::read_to_string(Stats::get_file(size)) {
             Ok(s) => serde_json::from_str::<Self>(&s).unwrap_or_default(),
             Err(_) => Stats::default(),
@@ -27,7 +27,7 @@ impl Stats {
     }
 
     /// Saves stats wit
-    pub fn save(&self, size: &Coords) -> Result<(), Error> {
+    pub fn save(&self, size: &Vec2) -> Result<(), Error> {
         let mut path = Stats::get_dir()?;
         create_dir_all(&path)?;
 
@@ -70,7 +70,7 @@ impl Stats {
     }
 
     /// Gets stats file
-    fn get_file(size: &Coords) -> PathBuf {
+    fn get_file(size: &Vec2) -> PathBuf {
         Stats::get_dir()
             .unwrap_or(PathBuf::from("."))
             .join(format!("{}x{}.json", size.x, size.y))

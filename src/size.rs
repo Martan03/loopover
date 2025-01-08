@@ -7,7 +7,7 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use termint::geometry::Coords;
+use termint::geometry::Vec2;
 
 /// A 2D vector implementing basic operations
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -193,9 +193,9 @@ impl From<[usize; 2]> for Size {
     }
 }
 
-impl From<Size> for Coords {
+impl From<Size> for Vec2 {
     fn from(value: Size) -> Self {
-        Coords::new(value.width, value.height)
+        Vec2::new(value.width, value.height)
     }
 }
 

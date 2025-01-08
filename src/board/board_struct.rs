@@ -1,21 +1,21 @@
 use rand::{seq::SliceRandom, Rng};
-use termint::{geometry::Coords, widgets::Widget};
+use termint::{geometry::Vec2, widgets::Widget};
 
 /// Represents tictactoe board
 #[derive(Debug, Clone)]
 pub struct Board {
     pub cells: Vec<usize>,
-    pub selected: Coords,
-    pub size: Coords,
+    pub selected: Vec2,
+    pub size: Vec2,
     pub small: bool,
 }
 
 impl Board {
     /// Creates new [`Board`]
-    pub fn new(size: Coords) -> Self {
+    pub fn new(size: Vec2) -> Self {
         Self {
             cells: (1..=(size.x * size.y)).collect(),
-            selected: Coords::new(0, 0),
+            selected: Vec2::new(0, 0),
             size,
             small: size.x * size.y > 9,
         }
@@ -45,7 +45,7 @@ impl Board {
     }
 
     /// Sets selected cell
-    pub fn select(&mut self, coords: Coords) {
+    pub fn select(&mut self, coords: Vec2) {
         self.selected = coords;
     }
 
@@ -101,7 +101,7 @@ impl Board {
         let mut rng = rand::thread_rng();
         let lim = self.size.x * self.size.x * self.size.y * self.size.y;
         for _ in 0..lim {
-            let sel = Coords::new(
+            let sel = Vec2::new(
                 rng.gen_range(0..self.size.x),
                 rng.gen_range(0..self.size.y),
             );

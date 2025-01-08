@@ -9,7 +9,7 @@ use crossterm::{
 };
 use termint::{
     enums::{Color, Modifier},
-    geometry::{Constraint, Coords, TextAlign},
+    geometry::{Constraint, TextAlign, Vec2},
     term::Term,
     widgets::{Layout, Paragraph, Spacer, StrSpanExtension, Widget},
 };
@@ -34,7 +34,7 @@ pub struct App {
     board: Board,
     time: Duration,
     moves_cnt: usize,
-    start_pos: Coords,
+    start_pos: Vec2,
     moves: String,
     state: State,
     stats: Stats,
@@ -42,13 +42,13 @@ pub struct App {
 
 impl App {
     /// Creates new [`App`] with board with given size and win length
-    pub fn new(size: Coords) -> Self {
+    pub fn new(size: Vec2) -> Self {
         Self {
             term: Term::new().small_screen(App::small_screen()),
             board: Board::new(size),
             time: Duration::from_secs(0),
             moves_cnt: 0,
-            start_pos: Coords::new(0, 0),
+            start_pos: Vec2::new(0, 0),
             moves: String::new(),
             state: State::Idle,
             stats: Stats::load(&size),
@@ -117,18 +117,18 @@ impl App {
     /// Renders current screen of the [`App`]
     pub fn render(&mut self) -> Result<(), Error> {
         let mut board = Layout::horizontal();
-        board.add_child(Spacer::new(), Constraint::Fill);
-        board.add_child(self.board.clone(), Constraint::Min(0));
-        board.add_child(self.simple_stats(), Constraint::Fill);
+        board.push(Spacer::new(), Constraint::Fill(1));
+        board.push(self.board.clone(), Constraint::Min(0));
+        board.push(self.simple_stats(), Constraint::Fill(1));
 
         let mut layout = Layout::vertical();
-        layout.add_child(Spacer::new(), Constraint::Fill);
-        layout.add_child(
+        layout.push(Spacer::new(), Constraint::Fill(1));
+        layout.push(
             board,
-            Constraint::Length(self.board.height(&Coords::new(0, 0))),
+            Constraint::Length(self.board.height(&Vec2::new(0, 0))),
         );
-        layout.add_child(Spacer::new(), Constraint::Fill);
-        layout.add_child(App::render_help(), Constraint::Min(0));
+        layout.push(Spacer::new(), Constraint::Fill(1));
+        layout.push(App::render_help(), Constraint::Min(0));
 
         self.term.render(layout)?;
         Ok(())
@@ -246,13 +246,13 @@ impl App {
     /// Small screen to be displayed, when game can't fit
     fn small_screen() -> Layout {
         let mut layout = Layout::vertical().center();
-        layout.add_child(
+        layout.push(
             "Terminal too small!"
                 .modifier(Modifier::BOLD)
                 .align(TextAlign::Center),
             Constraint::Min(0),
         );
-        layout.add_child(
+        layout.push(
             "You have to increase terminal size".align(TextAlign::Center),
             Constraint::Min(0),
         );
@@ -262,7 +262,7 @@ impl App {
     /// Gets simple stats layout
     fn simple_stats(&self) -> Layout {
         let mut layout = Layout::vertical().padding((0, 0, 0, 1));
-        layout.add_child(
+        layout.push(
             format!("{:.3}", self.time.as_secs_f64())
                 .fg(Color::White)
                 .modifier(Modifier::BOLD),
@@ -272,9 +272,9 @@ impl App {
         self.simple_stats_moves(&mut layout);
 
         if let Some(best) = self.stats.best() {
-            layout.add_child(self.simple_stats_best(best), Constraint::Min(0));
+            layout.push(self.simple_stats_best(best), Constraint::Min(0));
         }
-        layout.add_child(Spacer::new(), Constraint::Length(1));
+        layout.push(Spacer::new(), Constraint::Length(1));
 
         self.simple_stats_list(&mut layout);
         layout
@@ -286,7 +286,7 @@ impl App {
             0.0 => 0.0,
             t => self.moves_cnt as f64 / t,
         };
-        layout.add_child(
+        layout.push(
             format!("{} moves / {:.2} mps", self.moves_cnt, mps)
                 .fg(Color::Gray),
             Constraint::Min(0),
@@ -306,7 +306,7 @@ impl App {
 
     /// Adds stats list to the simple stats layout
     fn simple_stats_list(&self, layout: &mut Layout) {
-        let cnt = self.board.height(&Coords::new(0, 0)).saturating_sub(4);
+        let cnt = self.board.height(&Vec2::new(0, 0)).saturating_sub(4);
         for stat in self.stats.solves().iter().take(cnt) {
             let p = Paragraph::new(vec![
                 format!("{:.3}", stat.time().as_secs_f64())
@@ -315,7 +315,7 @@ impl App {
                 stat.moves_cnt().to_string().fg(Color::Gray).into(),
             ])
             .separator(" ");
-            layout.add_child(p, Constraint::Min(0));
+            layout.push(p, Constraint::Min(0));
         }
     }
 

@@ -1,7 +1,7 @@
 use termint::{
     buffer::Buffer,
     enums::{Color, Wrap},
-    geometry::{Coords, Unit},
+    geometry::{Unit, Vec2},
     widgets::{Grid, StrSpanExtension, Widget},
 };
 
@@ -28,14 +28,14 @@ impl Widget for Board {
         }
     }
 
-    fn height(&self, _size: &Coords) -> usize {
+    fn height(&self, _size: &Vec2) -> usize {
         match self.small {
             true => 3 * self.size.y,
             false => 5 * self.size.y,
         }
     }
 
-    fn width(&self, _size: &Coords) -> usize {
+    fn width(&self, _size: &Vec2) -> usize {
         match self.small {
             true => 7 * self.size.x,
             false => 11 * self.size.x,
@@ -72,7 +72,7 @@ impl Board {
                     .wrap(Wrap::Letter)
                     .bg(self.cell_color(val))
                     .fg(Color::White);
-                grid.add_child(span, x, y);
+                grid.push(span, x, y);
             }
         }
 

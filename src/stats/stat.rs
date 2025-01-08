@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use termint::geometry::Coords;
+use termint::geometry::Vec2;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Stat {
@@ -21,7 +21,7 @@ impl Stat {
         time: Duration,
         moves_cnt: usize,
         moves: String,
-        pos: Coords,
+        pos: Vec2,
         scramble: Vec<usize>,
     ) -> Self {
         Self {
