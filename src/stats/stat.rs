@@ -49,4 +49,9 @@ impl Stat {
     pub fn _scramble(&self) -> &Vec<usize> {
         &self.scramble
     }
+
+    /// Gets the date of the solve
+    pub fn date(&self) -> DateTime<Utc> {
+        self.date
+    }
 }

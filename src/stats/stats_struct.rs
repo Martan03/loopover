@@ -1,5 +1,6 @@
 use std::{
     fs::{create_dir_all, write, File},
+    ops::Index,
     path::PathBuf,
 };
 
@@ -11,7 +12,7 @@ use crate::error::Error;
 
 use super::stat::Stat;
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct Stats {
     solves: Vec<Stat>,
     best: Option<Stat>,
@@ -74,5 +75,13 @@ impl Stats {
         Stats::get_dir()
             .unwrap_or(PathBuf::from("."))
             .join(format!("{}x{}.json", size.x, size.y))
+    }
+}
+
+impl Index<usize> for Stats {
+    type Output = Stat;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.solves[index]
     }
 }

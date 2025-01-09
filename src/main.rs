@@ -20,6 +20,7 @@ mod config;
 mod error;
 mod size;
 mod stats;
+mod tui;
 
 fn main() -> ExitCode {
     match run() {
