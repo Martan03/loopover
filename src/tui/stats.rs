@@ -3,7 +3,9 @@ use termint::{
     enums::Color,
     geometry::Constraint,
     style::Style,
-    widgets::{Block, BorderType, Layout, Spacer, StrSpanExtension},
+    widgets::{
+        Block, BorderType, Layout, Paragraph, Spacer, StrSpanExtension,
+    },
 };
 
 use crate::{
@@ -28,16 +30,22 @@ impl App {
     /// Renders the game screen
     pub fn render_stats(&mut self) -> Result<(), Error> {
         let mut layout = Block::horizontal().border_type(BorderType::Thicker);
-        layout.push(
+        let mut list = Layout::vertical().padding((0, 1));
+        list.push(
             Table::new(self.stats.clone(), self.stat_state.clone()),
-            Constraint::Min(1),
+            Constraint::Fill(1),
         );
+        layout.push(list, Constraint::Min(0));
         self.render_stat(&mut layout);
 
         let mut hor_center = Layout::horizontal().center();
         hor_center.push(layout, Constraint::Min(0));
-        let mut ver_center = Layout::vertical().center();
+
+        let mut ver_center = Layout::vertical();
+        ver_center.push(Spacer::new(), Constraint::Fill(1));
         ver_center.push(hor_center, Constraint::Percent(75));
+        ver_center.push(Spacer::new(), Constraint::Fill(1));
+        ver_center.push(Self::render_stats_help(), Constraint::Min(0));
         self.term.render(ver_center)?;
         Ok(())
     }
@@ -126,6 +134,17 @@ impl App {
         wrapper.push(key.fg(Color::White), Constraint::Length(7));
         wrapper.push(value.style(val_style), Constraint::Min(1));
         layout.push(wrapper, Constraint::Length(1));
+    }
+
+    /// Renders help with all the keybinds
+    fn render_stats_help() -> Paragraph {
+        Paragraph::new(vec![
+            "[Up/Down]Change sel.".fg(Color::Gray).into(),
+            "[Left/Right]Replay solve".fg(Color::Gray).into(),
+            "[Tab]Game".fg(Color::Gray).into(),
+            "[Esc|q]Quit".fg(Color::Gray).into(),
+        ])
+        .separator("  ")
     }
 
     fn select_next(&mut self) {

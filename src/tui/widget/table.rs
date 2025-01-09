@@ -32,6 +32,7 @@ impl Widget for Table {
             return;
         }
 
+        self.auto_scroll(buffer.height() - 1);
         self.render_scrollbar(buffer);
         self.render_header(buffer);
         let mut pos = *buffer.pos();
@@ -149,6 +150,18 @@ impl Table {
             style,
         );
         pos.x = buffer.x();
+    }
+
+    fn auto_scroll(&self, height: usize) {
+        let mut state = self.state.borrow_mut();
+        if state.selected < state.offset + 3 {
+            state.offset = state.offset.saturating_sub(1);
+        } else if state.selected + 3 >= state.offset + height {
+            state.offset = std::cmp::min(
+                state.offset + 1,
+                self.stats.solves().len().saturating_sub(height),
+            );
+        }
     }
 
     fn calc_widths(width: usize) -> (usize, usize, usize) {

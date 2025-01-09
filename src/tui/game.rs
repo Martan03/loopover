@@ -156,6 +156,7 @@ impl App {
             "[Arrows]Move".fg(Color::Gray).into(),
             "[Shift+Arrows]Rotate".fg(Color::Gray).into(),
             "[Enter]Scramble".fg(Color::Gray).into(),
+            "[Tab]Stats".fg(Color::Gray).into(),
             "[Esc|q]Quit".fg(Color::Gray).into(),
         ])
         .separator("  ")
