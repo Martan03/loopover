@@ -18,7 +18,7 @@ use termint::{
 
 use crate::{
     board::board_struct::Board, error::Error, stats::stats_struct::Stats,
-    tui::widget::table::TableState,
+    tui::stats::StatsState,
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -41,29 +41,31 @@ pub struct App {
     pub board: Board,
     pub time: Duration,
     pub moves_cnt: usize,
-    pub start_pos: Vec2,
     pub moves: String,
     pub screen: Screen,
     pub state: State,
     pub stats: Stats,
-    pub stat_state: Rc<RefCell<TableState>>,
+    pub stat_state: Rc<RefCell<StatsState>>,
+    pub stat_board: Board,
 }
 
 impl App {
     /// Creates new [`App`] with board with given size and win length
-    pub fn new(size: Vec2) -> Self {
-        Self {
+    pub fn new(size: Vec2) -> Result<Self, Error> {
+        let mut app = Self {
             term: Term::new().small_screen(App::small_screen()),
             board: Board::new(size),
             time: Duration::from_secs(0),
             moves_cnt: 0,
-            start_pos: Vec2::new(0, 0),
             moves: String::new(),
             screen: Screen::Game,
             state: State::Idle,
             stats: Stats::load(&size),
-            stat_state: Rc::new(RefCell::new(TableState::new())),
-        }
+            stat_state: Rc::new(RefCell::new(StatsState::default())),
+            stat_board: Board::new(size),
+        };
+        app.load_stat_board()?;
+        Ok(app)
     }
 
     /// Runs the [`App`]

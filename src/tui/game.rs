@@ -172,9 +172,8 @@ impl App {
         self.moves_cnt = 1;
         self.render()?;
 
-        let scramble = self.board.cells.clone();
         if self.board.solved() {
-            return self.save_stat(scramble);
+            return self.save_stat();
         }
 
         let start = Instant::now();
@@ -192,7 +191,7 @@ impl App {
             }
         }
 
-        self.save_stat(scramble)
+        self.save_stat()
     }
 
     fn handle_move<F1, F2>(
@@ -206,14 +205,12 @@ impl App {
         F1: Fn(&mut App),
         F2: Fn(&mut App),
     {
-        let pos = self.board.selected;
         mov(self);
         if event.modifiers.contains(KeyModifiers::SHIFT) {
             rot(self);
             match self.state {
                 State::Scrambled => {
                     self.moves = c.to_uppercase().to_string();
-                    self.start_pos = pos;
                     self.game_loop()?
                 }
                 State::Playing => {
@@ -231,14 +228,13 @@ impl App {
     }
 
     /// Saves stat
-    fn save_stat(&mut self, scramble: Vec<usize>) -> Result<(), Error> {
+    fn save_stat(&mut self) -> Result<(), Error> {
         if self.state == State::Playing {
             self.stats.add(Stat::new(
                 self.time,
                 self.moves_cnt,
                 self.moves.clone(),
-                self.start_pos,
-                scramble,
+                self.board.selected,
             ));
             self.stats.save(&self.board.size)?;
             self.state = State::Idle;

@@ -1,6 +1,8 @@
 use rand::{seq::SliceRandom, Rng};
 use termint::{geometry::Vec2, widgets::Widget};
 
+use crate::error::Error;
+
 /// Represents tictactoe board
 #[derive(Debug, Clone)]
 pub struct Board {
@@ -92,6 +94,88 @@ impl Board {
     pub fn move_right(&mut self) {
         let start = self.selected.y * self.size.x + self.size.x - 1;
         self.rotate(start, self.size.x, -1);
+    }
+
+    /// Applies reverse solution to the board to reconstruct the scramble
+    pub fn apply_solution(
+        &mut self,
+        moves: &str,
+        end: Vec2,
+    ) -> Result<(), Error> {
+        self.restart();
+        self.select(end);
+
+        for c in moves.chars().rev() {
+            if c.is_whitespace() {
+                continue;
+            }
+            self.apply_rev_move(c)?;
+        }
+        Ok(())
+    }
+
+    /// Applies given move
+    pub fn apply_move(&mut self, m: char) -> Result<(), Error> {
+        match m {
+            'U' => {
+                self.move_up();
+                self.up();
+            }
+            'u' => self.up(),
+            'R' => {
+                self.move_right();
+                self.right();
+            }
+            'r' => self.right(),
+            'L' => {
+                self.move_left();
+                self.left();
+            }
+            'l' => self.left(),
+            'D' => {
+                self.move_down();
+                self.down();
+            }
+            'd' => self.down(),
+            _ => {
+                return Err(Error::Msg(
+                    "Invalid character in solution".to_string(),
+                ))
+            }
+        }
+        Ok(())
+    }
+
+    /// Removes given move
+    pub fn apply_rev_move(&mut self, m: char) -> Result<(), Error> {
+        match m {
+            'U' => {
+                self.move_down();
+                self.down();
+            }
+            'u' => self.down(),
+            'R' => {
+                self.move_left();
+                self.left();
+            }
+            'r' => self.left(),
+            'L' => {
+                self.move_right();
+                self.right();
+            }
+            'l' => self.right(),
+            'D' => {
+                self.move_up();
+                self.up();
+            }
+            'd' => self.up(),
+            _ => {
+                return Err(Error::Msg(
+                    "Invalid character in solution".to_string(),
+                ))
+            }
+        }
+        Ok(())
     }
 }
 

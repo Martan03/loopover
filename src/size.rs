@@ -98,13 +98,7 @@ impl IndexMut<usize> for Size {
 
 impl PartialOrd for Size {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        if self.width < other.width && self.height < other.height {
-            Some(std::cmp::Ordering::Less)
-        } else if self.width > other.width && self.height > other.height {
-            Some(std::cmp::Ordering::Greater)
-        } else {
-            None
-        }
+        Some(self.cmp(other))
     }
 }
 

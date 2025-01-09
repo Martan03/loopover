@@ -39,7 +39,10 @@ fn run() -> Result<(), Error> {
     match args.action {
         Action::Play => run_play(args),
         Action::Config => run_config(),
-        Action::Help => Ok(Args::help()),
+        Action::Help => {
+            Args::help();
+            Ok(())
+        }
     }
 }
 
@@ -47,7 +50,7 @@ fn run_play(args: Args) -> Result<(), Error> {
     let config = Config::load();
     let size = args.size.unwrap_or(config.default_size);
 
-    let mut app = App::new(size.into());
+    let mut app = App::new(size.into())?;
     app.run()
 }
 

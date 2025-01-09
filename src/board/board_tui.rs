@@ -13,18 +13,10 @@ use super::{
 impl Widget for Board {
     fn render(&self, buffer: &mut Buffer) {
         match self.small {
-            true => self._render(
-                buffer,
-                (7, 3),
-                |n| get_min_cell(n),
-                |n| get_min_sel_cell(n),
-            ),
-            false => self._render(
-                buffer,
-                (11, 5),
-                |n| get_cell(n),
-                |n| get_sel_cell(n),
-            ),
+            true => {
+                self._render(buffer, (7, 3), get_min_cell, get_min_sel_cell)
+            }
+            false => self._render(buffer, (11, 5), get_cell, get_sel_cell),
         }
     }
 
