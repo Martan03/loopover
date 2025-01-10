@@ -165,11 +165,11 @@ impl Table {
     }
 
     fn calc_widths(width: usize) -> (usize, usize, usize) {
-        let part = width.saturating_sub(1) as f64 / 20.;
+        let part = width.saturating_sub(2) as f64 / 20.;
         (
             (part * 9.) as usize,
-            (part * 8.) as usize,
-            (part * 5.) as usize,
+            (part * 9.) as usize,
+            (part * 4.) as usize,
         )
     }
 }

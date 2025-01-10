@@ -30,7 +30,7 @@ impl App {
     /// Renders the game screen
     pub fn render_stats(&mut self) -> Result<(), Error> {
         let mut layout = Block::horizontal().border_type(BorderType::Thicker);
-        let mut list = Layout::vertical().padding((0, 1));
+        let mut list = Layout::vertical().padding((0, 0, 0, 1));
         list.push(
             Table::new(self.stats.clone(), self.stat_state.clone()),
             Constraint::Fill(1),

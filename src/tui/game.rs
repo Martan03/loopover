@@ -239,6 +239,12 @@ impl App {
             ));
             self.stats.save(&self.board.size)?;
             self.state = State::Idle;
+
+            if self.stat_state.borrow().selected > 0 {
+                self.stat_state.borrow_mut().selected += 1;
+            } else {
+                self.load_stat_board()?;
+            }
         }
         Ok(())
     }

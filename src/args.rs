@@ -52,7 +52,7 @@ impl Args {
             "loopover" => "Opens 3x3 game\n"
             "loopover" ["options"] => "Behaves according to options\n"
             "Options":
-            "-s  --size" => "Sets size of the game\n"
+            "-s  --size" ["width"] ["height"] => "Sets size of the game\n"
             "-h  --help" => "Prints this help"
         );
     }
