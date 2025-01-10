@@ -98,6 +98,12 @@ impl App {
         let mut slayout = Layout::vertical().padding((0, 1));
         Self::render_item(
             &mut slayout,
+            "ID:",
+            &(self.stats.solves().len() - state.selected).to_string(),
+            Style::new().fg(Color::Magenta),
+        );
+        Self::render_item(
+            &mut slayout,
             "Time:",
             &stat.format_time(),
             Style::new().fg(Color::Cyan),
