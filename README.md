@@ -2,7 +2,7 @@
 
 Loopover TUI implementation in Rust 🦀
 
-![image](https://github.com/user-attachments/assets/794dc0a0-749d-4159-b422-655af2498d4f)
+![image](https://github.com/user-attachments/assets/113bc955-d580-4145-8f99-96f2d279907c)
 
 ## Table of Contents
 - [Installation](#installation)
@@ -68,14 +68,24 @@ When the board contains more then 9 cells, more compact cell type is used.
 The game works the same, it is just for the purpose of fitting the board to
 the screen.
 
-![image](https://github.com/user-attachments/assets/cce85609-4742-4194-adea-886915aaa521)
+![image](https://github.com/user-attachments/assets/05bed42e-6c70-4c6f-bd93-20197926b212)
 
 ### Statistics
 
-Currently, only last few solves are displayed on the right of the board, but
-statistics page will be added later.
+You can see last few solves on the right of the board, but if you want to
+look at more detailed statistics, you can press `Tab` to open Statistics
+screen. It shows list of all solves on the board with current size as well
+as time, date, moves and also game replay of the currently selected stat.
+
+To view the replay, you can go to the next move by pressing `Right` key,
+or going back by pressing `Left` key.
+
+To go back to the game screen, you can press `Tab` again.
+
+![image](https://github.com/user-attachments/assets/cbc9742b-b719-4e36-b4aa-408479b00d10)
 
 ### Other keybinds
+- `CTRL + c`: rage quit
 - `q`/`Esc`: exit the game
 
 ## Links
