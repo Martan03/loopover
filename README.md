@@ -60,7 +60,7 @@ puzzle. By using `Arrow` keys you can change selected cell and when pressing
 direction corresponding to the arrow pressed. The timer is started after the
 first sliding move and after finishing the solve, it's saved in the stats.
 
-![image](https://github.com/user-attachments/assets/05bed42e-6c70-4c6f-bd93-20197926b212)
+![image](https://github.com/user-attachments/assets/113bc955-d580-4145-8f99-96f2d279907c)
 
 ### Other sizes
 
@@ -68,7 +68,7 @@ When the board contains more then 9 cells, more compact cell type is used.
 The game works the same, it is just for the purpose of fitting the board to
 the screen.
 
-![image](https://github.com/user-attachments/assets/05bed42e-6c70-4c6f-bd93-20197926b212)
+![image](https://github.com/user-attachments/assets/54e4cafd-15e5-4140-ac15-f5679bcdce7f)
 
 ### Statistics
 
